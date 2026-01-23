@@ -4,6 +4,7 @@ import { Slot } from "expo-router"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { LoaderProvider } from "@/context/LoaderContext"
 import { AuthProvider } from "@/context/AuthContext"
+import "../global.css"
 
 const RootLayout = () => {
   const insets = useSafeAreaInsets()
@@ -11,7 +12,12 @@ const RootLayout = () => {
   return (
     <LoaderProvider>
       <AuthProvider>
-        <View style={{ marginTop: insets.top, flex: 1 }}>
+        <View style={{ 
+          flex: 1,
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          backgroundColor: '#f9fafb'
+        }}>
           <Slot />
         </View>
       </AuthProvider>
