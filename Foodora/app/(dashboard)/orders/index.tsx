@@ -80,112 +80,132 @@ const Orders = () => {
     router.push({ pathname: "/orders/form", params: { orderId: id } })
   }
 
-  const formatDate = (dateStr: string | number | Date) =>
-    new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit"
     })
+  }
+
+  const statusOptions: Status[] = ["All", "Pending", "Delivered"]
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="flex-row justify-around py-3 bg-white border-b border-gray-200">
-        {(["All", "Delivered", "Pending"] as Status[]).map((stat) => (
-          <TouchableOpacity key={stat} onPress={() => setActiveStatus(stat)}>
-            <Text
-              className={`text-lg font-semibold ${
-                activeStatus === stat ? "text-blue-600" : "text-gray-500"
-              }`}
-            >
-              {stat}
-            </Text>
+      {/* Status Filter */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        className="px-4 py-3 bg-white border-b border-gray-200"
+      >
+        {statusOptions.map((stat) => (
+          <TouchableOpacity 
+            key={stat} 
+            onPress={() => setActiveStatus(stat)}
+            className="mr-3"
+          >
+            <View className={`px-4 py-2 rounded-full ${activeStatus === stat ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+              <Text className={`font-medium ${activeStatus === stat ? 'text-indigo-600' : 'text-gray-600'}`}>
+                {stat}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
+      {/* Add Button */}
       <TouchableOpacity
-        className="bg-blue-600/80 rounded-full shadow-lg absolute bottom-0 right-0 m-6 p-2 z-50"
+        className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-xl absolute bottom-6 right-6 p-4 z-50"
         onPress={() => router.push("/orders/form")}
       >
-        <MaterialIcons name="add" size={40} color="#fff" />
+        <MaterialIcons name="add" size={30} color="#fff" />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+      {/* Orders List */}
+      <ScrollView className="flex-1 px-4 pt-4">
         {orders.length === 0 ? (
-          <Text className="text-gray-600 text-center mt-10">
-            No orders found.
-          </Text>
+          <View className="items-center justify-center mt-20">
+            <MaterialIcons name="receipt" size={80} color="#D1D5DB" />
+            <Text className="text-gray-500 text-lg mt-4">No orders found</Text>
+            <Text className="text-gray-400 mt-2">Create your first order!</Text>
+          </View>
         ) : (
           orders.map((order) => (
             <View
               key={order.id}
-              className="bg-white p-4 rounded-2xl mb-4 border border-gray-300 shadow-md"
+              className="bg-white rounded-2xl p-4 mb-4 shadow-md"
             >
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: "/orders/[id]",
-                    params: { id: order.id }
-                  })
-                }
-                className="flex-row justify-between items-center mb-2"
-              >
-                <View className="flex-1 mr-2">
-                  <Text className="text-gray-800 text-lg font-semibold mb-1">
-                    Order #{order.id}
+              <View className="flex-row justify-between items-start mb-3">
+                <View>
+                  <Text className="text-lg font-bold text-gray-800">
+                    Order #{order.id.slice(0, 8)}
                   </Text>
-                  <Text className="text-gray-600 mb-2">
-                    Items: {order.items.length} - Total: ${order.total}
-                  </Text>
-                  <Text
-                    className={`font-medium ${
-                      order.isDelivered ? "text-green-600" : "text-yellow-600"
-                    }`}
-                  >
-                    {order.isDelivered ? "Delivered" : "Pending"}
+                  <Text className="text-gray-500 text-sm">
+                    {formatDate(order.placedAt)}
                   </Text>
                 </View>
-
+                
                 <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation()
-                    handleComplete(order.id, order.isDelivered)
-                  }}
-                  className={`p-2 rounded-full ${
-                    order.isDelivered ? "bg-green-100" : "bg-gray-100"
-                  }`}
+                  onPress={() => handleComplete(order.id, order.isDelivered)}
+                  className={`p-2 rounded-full ${order.isDelivered ? 'bg-green-100' : 'bg-yellow-100'}`}
                 >
                   <MaterialIcons
-                    name={
-                      order.isDelivered
-                        ? "check-circle"
-                        : "radio-button-unchecked"
-                    }
-                    size={28}
-                    color={order.isDelivered ? "#16A34A" : "#6B7280"}
+                    name={order.isDelivered ? "check-circle" : "schedule"}
+                    size={24}
+                    color={order.isDelivered ? "#10B981" : "#F59E0B"}
                   />
                 </TouchableOpacity>
-              </TouchableOpacity>
-              <View className="flex-row justify-between items-end">
-                <Text className="text-gray-500 text-sm mb-1">
-                  Placed: {order.placedAt ? formatDate(order.placedAt) : "-"}
+              </View>
+
+              {/* Items */}
+              <View className="mb-4">
+                <Text className="text-gray-600 font-medium mb-2">Items:</Text>
+                <View className="bg-gray-50 rounded-xl p-3">
+                  {order.items.map((item, index) => (
+                    <View key={index} className="flex-row items-center mb-2 last:mb-0">
+                      <MaterialIcons name="circle" size={8} color="#6B7280" />
+                      <Text className="text-gray-700 ml-2">{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-xl font-bold text-indigo-600">
+                  ${order.total}
                 </Text>
-                <View className="flex-row justify-end mt-2 space-x-3">
+                
+                <View className="flex-row">
+                  <TouchableOpacity
+                    onPress={() => router.push({ pathname: "/orders/[id]", params: { id: order.id } })}
+                    className="p-2 rounded-lg bg-blue-50 mr-2"
+                  >
+                    <MaterialIcons name="visibility" size={20} color="#3B82F6" />
+                  </TouchableOpacity>
+                  
                   <TouchableOpacity
                     onPress={() => handleEdit(order.id)}
-                    className="p-2 rounded-full bg-yellow-500"
+                    className="p-2 rounded-lg bg-yellow-50 mr-2"
                   >
-                    <MaterialIcons name="edit" size={28} color="#ffffff" />
+                    <MaterialIcons name="edit" size={20} color="#F59E0B" />
                   </TouchableOpacity>
+                  
                   <TouchableOpacity
                     onPress={() => handleDelete(order.id)}
-                    className="p-2 ms-2 rounded-full bg-red-500"
+                    className="p-2 rounded-lg bg-red-50"
                   >
-                    <MaterialIcons name="delete" size={28} color="#ffffff" />
+                    <MaterialIcons name="delete" size={20} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              {/* Status Badge */}
+              <View className={`mt-3 px-3 py-1 rounded-full self-start ${order.isDelivered ? 'bg-green-100' : 'bg-yellow-100'}`}>
+                <Text className={`font-medium ${order.isDelivered ? 'text-green-800' : 'text-yellow-800'}`}>
+                  {order.isDelivered ? '✓ Delivered' : '⏳ Pending'}
+                </Text>
               </View>
             </View>
           ))
