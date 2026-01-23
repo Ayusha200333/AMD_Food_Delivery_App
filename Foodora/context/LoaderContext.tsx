@@ -24,9 +24,10 @@ export const LoaderProvider = ({ children }: { children: ReactNode }) => {
       {children}
 
       {isLoading && (
-        <View className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center bg-black/30">
-          <View className="bg-white p-6 rounded-2xl shadow-lg">
-            <ActivityIndicator size="large" color="#1e40af" />
+               <View className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center bg-black/50 z-50">
+          <View className="bg-white p-8 rounded-2xl shadow-2xl items-center">
+            <ActivityIndicator size="large" color="#4f46e5" />
+            <Text className="mt-4 text-gray-700 font-medium">Loading...</Text>
           </View>
         </View>
       )}

@@ -25,15 +25,13 @@ export const registerUser = async (
   await updateProfile(userCredential.user, { displayName: fullname })
   await setDoc(doc(db, "users", userCredential.user.uid), {
     name: fullname,
-    role: "",
     email,
-    createAt: new Date()
+    createdAt: new Date().toISOString()
   })
   return userCredential.user
 }
 
 export const logoutUser = async () => {
   await signOut(auth)
-  AsyncStorage.clear()
-  return
+  await AsyncStorage.clear()
 }
