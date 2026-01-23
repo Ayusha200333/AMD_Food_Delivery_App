@@ -12,6 +12,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { Food } from '@/types/food'
 
 const auth = getAuth()
 const foodsCollection = collection(db, 'foods')
@@ -21,7 +22,7 @@ export const addFood = async (
   description: string,
   price: number,
   category: string
-) => {
+): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -35,9 +36,13 @@ export const addFood = async (
   })
 }
 
-export const getAllFoods = async () => {
+export const getAllFoods = async (): Promise<Food[]> => {
+  const user = auth.currentUser
+  if (!user) throw new Error('User not authenticated.')
+
   const q = query(
     foodsCollection,
+    where('userId', '==', user.uid),
     orderBy('createdAt', 'desc')
   )
 
@@ -50,12 +55,13 @@ export const getAllFoods = async () => {
       description: data.description as string,
       price: data.price as number,
       category: data.category as string,
-      createdAt: data.createdAt as string
+      createdAt: data.createdAt as string,
+      userId: data.userId as string
     }
   })
 }
 
-export const getFoodById = async (id: string) => {
+export const getFoodById = async (id: string): Promise<Food> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -73,7 +79,8 @@ export const getFoodById = async (id: string) => {
     description: data.description || '',
     price: data.price || 0,
     category: data.category || '',
-    createdAt: data.createdAt || ''
+    createdAt: data.createdAt || '',
+    userId: data.userId || ''
   }
 }
 
@@ -83,7 +90,7 @@ export const updateFood = async (
   description: string,
   price: number,
   category: string
-) => {
+): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -99,11 +106,12 @@ export const updateFood = async (
     name,
     description,
     price,
-    category
+    category,
+    updatedAt: new Date().toISOString()
   })
 }
 
-export const deleteFood = async (id: string) => {
+export const deleteFood = async (id: string): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -116,9 +124,13 @@ export const deleteFood = async (id: string) => {
   await deleteDoc(ref)
 }
 
-export const getAllFoodsByCategory = async (category: string) => {
+export const getAllFoodsByCategory = async (category: string): Promise<Food[]> => {
+  const user = auth.currentUser
+  if (!user) throw new Error('User not authenticated.')
+
   const q = query(
     foodsCollection,
+    where('userId', '==', user.uid),
     where('category', '==', category),
     orderBy('createdAt', 'desc')
   )
@@ -132,7 +144,8 @@ export const getAllFoodsByCategory = async (category: string) => {
       description: data.description as string,
       price: data.price as number,
       category: data.category as string,
-      createdAt: data.createdAt as string
+      createdAt: data.createdAt as string,
+      userId: data.userId as string
     }
   })
 }
