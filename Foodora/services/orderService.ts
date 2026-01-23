@@ -12,6 +12,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { Order } from '@/types/order'
 
 const auth = getAuth()
 const ordersCollection = collection(db, 'orders')
@@ -20,7 +21,7 @@ export const addOrder = async (
   items: string[],
   total: number,
   isDelivered: boolean = false
-) => {
+): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -33,7 +34,7 @@ export const addOrder = async (
   })
 }
 
-export const getAllOrders = async () => {
+export const getAllOrders = async (): Promise<Order[]> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -51,12 +52,13 @@ export const getAllOrders = async () => {
       items: data.items as string[],
       total: data.total as number,
       isDelivered: (data.isDelivered as boolean) || false,
-      placedAt: data.placedAt as string
+      placedAt: data.placedAt as string,
+      userId: data.userId as string
     }
   })
 }
 
-export const getOrderById = async (id: string) => {
+export const getOrderById = async (id: string): Promise<Order> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -73,7 +75,8 @@ export const getOrderById = async (id: string) => {
     items: data.items || [],
     total: data.total || 0,
     isDelivered: data.isDelivered || false,
-    placedAt: data.placedAt || ''
+    placedAt: data.placedAt || '',
+    userId: data.userId || ''
   }
 }
 
@@ -82,7 +85,7 @@ export const updateOrder = async (
   items: string[],
   total: number,
   isDelivered?: boolean
-) => {
+): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -97,11 +100,12 @@ export const updateOrder = async (
   await updateDoc(ref, {
     items,
     total,
-    isDelivered: isDelivered ?? data.isDelivered
+    isDelivered: isDelivered ?? data.isDelivered,
+    updatedAt: new Date().toISOString()
   })
 }
 
-export const deleteOrder = async (id: string) => {
+export const deleteOrder = async (id: string): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -114,7 +118,7 @@ export const deleteOrder = async (id: string) => {
   await deleteDoc(ref)
 }
 
-export const completeOrder = async (id: string, isDelivered: boolean = true) => {
+export const completeOrder = async (id: string, isDelivered: boolean = true): Promise<void> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -127,7 +131,7 @@ export const completeOrder = async (id: string, isDelivered: boolean = true) => 
   await updateDoc(ref, { isDelivered })
 }
 
-export const getAllOrdersByStatus = async (isDelivered: boolean) => {
+export const getAllOrdersByStatus = async (isDelivered: boolean): Promise<Order[]> => {
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated.')
 
@@ -146,7 +150,8 @@ export const getAllOrdersByStatus = async (isDelivered: boolean) => {
       items: data.items as string[],
       total: data.total as number,
       isDelivered: (data.isDelivered as boolean) || false,
-      placedAt: data.placedAt as string
+      placedAt: data.placedAt as string,
+      userId: data.userId as string
     }
   })
 }
