@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native"
+import { View, Text, TouchableOpacity, Alert, ScrollView, Image } from "react-native"
 import React, { useCallback, useState } from "react"
 import { MaterialIcons } from "@expo/vector-icons"
 import { useFocusEffect, useRouter } from "expo-router"
@@ -10,7 +10,7 @@ import {
 } from "@/services/foodService"
 import { Food } from "@/types/food"
 
-type Category = "All" | "Pizza" | "Burger" | "Dessert" // Example categories
+type Category = "All" | "Pizza" | "Burger" | "Dessert" | "Sushi" | "Pasta"
 
 const Foods = () => {
   const router = useRouter()
@@ -67,76 +67,109 @@ const Foods = () => {
     router.push({ pathname: "/foods/form", params: { foodId: id } })
   }
 
+  const categories: Category[] = ["All", "Pizza", "Burger", "Dessert", "Sushi", "Pasta"]
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "Pizza": return "#EF4444"
+      case "Burger": return "#F59E0B"
+      case "Dessert": return "#EC4899"
+      case "Sushi": return "#10B981"
+      case "Pasta": return "#8B5CF6"
+      default: return "#6B7280"
+    }
+  }
+
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="flex-row justify-around py-3 bg-white border-b border-gray-200">
-        {(["All", "Pizza", "Burger", "Dessert"] as Category[]).map((cat) => (
-          <TouchableOpacity key={cat} onPress={() => setActiveCategory(cat)}>
-            <Text
-              className={`text-lg font-semibold ${
-                activeCategory === cat ? "text-blue-600" : "text-gray-500"
-              }`}
-            >
-              {cat}
-            </Text>
+      {/* Category Filter */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        className="px-4 py-3 bg-white border-b border-gray-200"
+      >
+        {categories.map((cat) => (
+          <TouchableOpacity 
+            key={cat} 
+            onPress={() => setActiveCategory(cat)}
+            className="mr-3"
+          >
+            <View className={`px-4 py-2 rounded-full ${activeCategory === cat ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+              <Text className={`font-medium ${activeCategory === cat ? 'text-indigo-600' : 'text-gray-600'}`}>
+                {cat}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
+      {/* Add Button */}
       <TouchableOpacity
-        className="bg-blue-600/80 rounded-full shadow-lg absolute bottom-0 right-0 m-6 p-2 z-50"
+        className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-xl absolute bottom-6 right-6 p-4 z-50"
         onPress={() => router.push("/foods/form")}
       >
-        <MaterialIcons name="add" size={40} color="#fff" />
+        <MaterialIcons name="add" size={30} color="#fff" />
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+      {/* Foods List */}
+      <ScrollView className="flex-1 px-4 pt-4">
         {foods.length === 0 ? (
-          <Text className="text-gray-600 text-center mt-10">
-            No foods found.
-          </Text>
+          <View className="items-center justify-center mt-20">
+            <MaterialIcons name="fastfood" size={80} color="#D1D5DB" />
+            <Text className="text-gray-500 text-lg mt-4">No foods found</Text>
+            <Text className="text-gray-400 mt-2">Add your first food item!</Text>
+          </View>
         ) : (
           foods.map((food) => (
             <View
               key={food.id}
-              className="bg-white p-4 rounded-2xl mb-4 border border-gray-300 shadow-md"
+              className="bg-white rounded-2xl p-4 mb-4 shadow-md"
             >
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: "/foods/[id]",
-                    params: { id: food.id }
-                  })
-                }
-                className="flex-row justify-between items-center mb-2"
-              >
-                <View className="flex-1 mr-2">
-                  <Text className="text-gray-800 text-lg font-semibold mb-1">
-                    {food.name}
-                  </Text>
-                  <Text className="text-gray-600 mb-2">
-                    ${food.price} - {food.category}
-                  </Text>
-                  <Text className="text-gray-600">
-                    {food.description.length > 30
-                      ? `${food.description.substring(0, 30)}...`
-                      : food.description}
-                  </Text>
+              <View className="flex-row">
+                <View className="w-20 h-20 bg-gray-100 rounded-xl items-center justify-center mr-4">
+                  <MaterialIcons name="restaurant" size={32} color={getCategoryColor(food.category)} />
                 </View>
-              </TouchableOpacity>
-              <View className="flex-row justify-end mt-2 space-x-3">
-                <TouchableOpacity
-                  onPress={() => handleEdit(food.id)}
-                  className="p-2 rounded-full bg-yellow-500"
-                >
-                  <MaterialIcons name="edit" size={28} color="#ffffff" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDelete(food.id)}
-                  className="p-2 ms-2 rounded-full bg-red-500"
-                >
-                  <MaterialIcons name="delete" size={28} color="#ffffff" />
-                </TouchableOpacity>
+                
+                <View className="flex-1">
+                  <View className="flex-row justify-between items-start">
+                    <Text className="text-lg font-bold text-gray-800 flex-1 mr-2">{food.name}</Text>
+                    <Text className="text-xl font-bold text-indigo-600">${food.price}</Text>
+                  </View>
+                  
+                  <Text className="text-gray-500 text-sm mb-2">{food.category}</Text>
+                  <Text className="text-gray-600 mb-3" numberOfLines={2}>
+                    {food.description}
+                  </Text>
+                  
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-gray-400 text-sm">
+                      Added: {new Date(food.createdAt).toLocaleDateString()}
+                    </Text>
+                    
+                    <View className="flex-row">
+                      <TouchableOpacity
+                        onPress={() => router.push({ pathname: "/foods/[id]", params: { id: food.id } })}
+                        className="p-2 rounded-lg bg-blue-50 mr-2"
+                      >
+                        <MaterialIcons name="visibility" size={20} color="#3B82F6" />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        onPress={() => handleEdit(food.id)}
+                        className="p-2 rounded-lg bg-yellow-50 mr-2"
+                      >
+                        <MaterialIcons name="edit" size={20} color="#F59E0B" />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        onPress={() => handleDelete(food.id)}
+                        className="p-2 rounded-lg bg-red-50"
+                      >
+                        <MaterialIcons name="delete" size={20} color="#EF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
           ))
