@@ -16,7 +16,7 @@ import { Food } from "@/types/food"
 
 const FoodForm = () => {
   const router = useRouter()
-  const { foodId } = useLocalSearchParams()
+  const { foodId } = useLocalSearchParams<{ foodId: string }>()
   const { showLoader, hideLoader, isLoading } = useLoader()
 
   const [name, setName] = useState("")
@@ -24,10 +24,12 @@ const FoodForm = () => {
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("")
 
+  const categories = ["Pizza", "Burger", "Dessert", "Sushi", "Pasta", "Salad", "Drinks"]
+
   useEffect(() => {
     if (foodId) {
       showLoader()
-      getFoodById(foodId as string)
+      getFoodById(foodId)
         .then((food: Food) => {
           setName(food.name)
           setDescription(food.description || "")
@@ -46,13 +48,19 @@ const FoodForm = () => {
       return
     }
 
+    const priceNum = parseFloat(price)
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Error", "Please enter a valid price")
+      return
+    }
+
     showLoader()
     try {
       if (foodId) {
-        await updateFood(foodId as string, name, description, parseFloat(price), category)
+        await updateFood(foodId, name, description, priceNum, category)
         Alert.alert("Success", "Food updated successfully")
       } else {
-        await addFood(name, description, parseFloat(price), category)
+        await addFood(name, description, priceNum, category)
         Alert.alert("Success", "Food added successfully")
       }
       router.back()
@@ -64,74 +72,113 @@ const FoodForm = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
-      <TouchableOpacity
-        className="flex-row items-center mb-6"
-        onPress={() => router.back()}
-      >
-        <MaterialIcons name="arrow-back-ios" size={24} color="#333" />
-        <Text className="text-gray-800 font-medium ml-1">Back</Text>
-      </TouchableOpacity>
-
-      <View className="p-6 rounded-2xl bg-white border border-gray-300 shadow-md">
-        <Text className="text-gray-800 text-lg font-semibold mb-2">
-          Food Name
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="bg-white px-6 pt-12 pb-4 flex-row items-center border-b border-gray-200">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <MaterialIcons name="arrow-back" size={28} color="#374151" />
+        </TouchableOpacity>
+        <Text className="text-2xl font-bold text-gray-800">
+          {foodId ? "Edit Food" : "Add New Food"}
         </Text>
-        <TextInput
-          placeholder="Enter food name"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
-          className="mb-5 p-4 rounded-xl bg-gray-100 text-gray-800 border border-gray-300 text-base font-medium"
-        />
-
-        <Text className="text-gray-800 text-lg font-semibold mb-2">
-          Description
-        </Text>
-        <TextInput
-          placeholder="Enter description"
-          placeholderTextColor="#999"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          className="mb-6 p-4 rounded-xl bg-gray-100 text-gray-800 border border-gray-300 text-base font-medium h-32"
-        />
-
-        <Text className="text-gray-800 text-lg font-semibold mb-2">
-          Price
-        </Text>
-        <TextInput
-          placeholder="Enter price"
-          placeholderTextColor="#999"
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="numeric"
-          className="mb-5 p-4 rounded-xl bg-gray-100 text-gray-800 border border-gray-300 text-base font-medium"
-        />
-
-        <Text className="text-gray-800 text-lg font-semibold mb-2">
-          Category
-        </Text>
-        <TextInput
-          placeholder="Enter category (e.g., Pizza)"
-          placeholderTextColor="#999"
-          value={category}
-          onChangeText={setCategory}
-          className="mb-5 p-4 rounded-xl bg-gray-100 text-gray-800 border border-gray-300 text-base font-medium"
-        />
-
-        <Pressable
-          className={`px-6 py-3 rounded-2xl ${
-            foodId ? "bg-blue-600/80" : "bg-green-600/80"
-          }`}
-          onPress={handleSubmit}
-        >
-          <Text className="text-white text-lg text-center">
-            {isLoading ? "Please wait..." : foodId ? "Update Food" : "Add Food"}
-          </Text>
-        </Pressable>
       </View>
-    </ScrollView>
+
+      <ScrollView className="flex-1 p-6">
+        <View className="bg-white rounded-2xl p-6 shadow-sm">
+          {/* Food Name */}
+          <View className="mb-6">
+            <Text className="text-gray-700 text-lg font-semibold mb-2">
+              Food Name *
+            </Text>
+            <TextInput
+              placeholder="e.g., Margherita Pizza"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+              className="p-4 rounded-xl bg-gray-50 text-gray-800 border border-gray-200 text-base"
+            />
+          </View>
+
+          {/* Description */}
+          <View className="mb-6">
+            <Text className="text-gray-700 text-lg font-semibold mb-2">
+              Description *
+            </Text>
+            <TextInput
+              placeholder="Describe your food item..."
+              placeholderTextColor="#9CA3AF"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
+              className="p-4 rounded-xl bg-gray-50 text-gray-800 border border-gray-200 text-base h-32"
+            />
+          </View>
+
+          {/* Price */}
+          <View className="mb-6">
+            <Text className="text-gray-700 text-lg font-semibold mb-2">
+              Price *
+            </Text>
+            <View className="flex-row items-center">
+              <Text className="text-gray-500 mr-2 text-lg">$</Text>
+              <TextInput
+                placeholder="0.00"
+                placeholderTextColor="#9CA3AF"
+                value={price}
+                onChangeText={setPrice}
+                keyboardType="decimal-pad"
+                className="flex-1 p-4 rounded-xl bg-gray-50 text-gray-800 border border-gray-200 text-base"
+              />
+            </View>
+          </View>
+
+          {/* Category */}
+          <View className="mb-8">
+            <Text className="text-gray-700 text-lg font-semibold mb-2">
+              Category *
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  onPress={() => setCategory(cat)}
+                  className={`mr-3 px-4 py-3 rounded-full ${category === cat ? 'bg-indigo-100 border-2 border-indigo-200' : 'bg-gray-100'}`}
+                >
+                  <Text className={`font-medium ${category === cat ? 'text-indigo-600' : 'text-gray-600'}`}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            {category && (
+              <Text className="text-green-600 mt-2 font-medium">
+                Selected: {category}
+              </Text>
+            )}
+          </View>
+
+          {/* Submit Button */}
+          <Pressable
+            className={`px-6 py-4 rounded-2xl ${isLoading ? 'opacity-70' : ''}`}
+            style={{ backgroundColor: foodId ? '#3B82F6' : '#10B981' }}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            <Text className="text-white text-lg text-center font-semibold">
+              {isLoading ? "Please wait..." : foodId ? "Update Food" : "Add Food"}
+            </Text>
+          </Pressable>
+
+          <TouchableOpacity 
+            className="mt-4"
+            onPress={() => router.back()}
+          >
+            <Text className="text-gray-500 text-center font-medium">Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   )
 }
 
