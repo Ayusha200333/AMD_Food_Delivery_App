@@ -79,10 +79,21 @@ const Home = () => {
     >
       <Animatable.View animation="fadeInDown" duration={800} className="bg-purple-950 px-6 pt-16 pb-12">
         <View className="flex-row justify-between items-center">
-          <View>
-            <Text className="text-white/80 text-lg">Hi..</Text>
+          <View className="flex-1 pr-4">
+            {/* <Text className="text-white/80 text-lg">Welcome To Foodora</Text>
             <Text className="text-white text-4xl font-extrabold mt-1">
               {user?.displayName?.split(" ")[0] || "User"} 👋
+            </Text> */}
+            <Text className="text-white text-5xl font-extrabold tracking-wide">
+              Foodora
+            </Text>
+
+            <Text className="text-white/80 text-lg mt-2">
+              Welcome back,{" "}
+            <Text className="text-white font-semibold">
+               {user?.displayName?.split(" ")[0] || "User"}
+            </Text>{" "}
+              👋
             </Text>
           </View>
           <TouchableOpacity className="bg-white/20 p-4 rounded-full">

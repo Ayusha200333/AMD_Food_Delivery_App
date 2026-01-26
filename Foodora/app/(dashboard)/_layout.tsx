@@ -21,6 +21,7 @@ const DashboardLayout = () => {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopWidth: 1,
