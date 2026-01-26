@@ -1,16 +1,12 @@
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signInWithEmailAndPassword,
-  signOut
-} from "firebase/auth"
-import { auth, db } from "./firebase"
-import { doc, setDoc } from "firebase/firestore"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { auth } from "./firebase";
+import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const login = async (email: string, password: string) => {
-  return await signInWithEmailAndPassword(auth, email, password)
-}
+  return await signInWithEmailAndPassword(auth, email, password);
+};
 
 export const registerUser = async (
   fullname: string,
@@ -21,17 +17,17 @@ export const registerUser = async (
     auth,
     email,
     password
-  )
-  await updateProfile(userCredential.user, { displayName: fullname })
+  );
+  await updateProfile(userCredential.user, { displayName: fullname });
   await setDoc(doc(db, "users", userCredential.user.uid), {
     name: fullname,
     email,
     createdAt: new Date().toISOString()
-  })
-  return userCredential.user
-}
+  });
+  return userCredential.user;
+};
 
 export const logoutUser = async () => {
-  await signOut(auth)
-  await AsyncStorage.clear()
-}
+  await signOut(auth);
+  await AsyncStorage.clear();
+};

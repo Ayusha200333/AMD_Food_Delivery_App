@@ -1,6 +1,6 @@
-import { View, Text } from "react-native"
-import React from "react"
-import { Slot, Stack } from "expo-router"
+import { View, Text } from "react-native";
+import React from "react";
+import { Slot, Stack } from "expo-router";
 
 const FoodsLayout = () => {
   return (
@@ -14,7 +14,7 @@ const FoodsLayout = () => {
       <Stack.Screen name="form" />
       <Stack.Screen name="[id]" />
     </Stack>
-  )
-}
+  );
+};
 
-export default FoodsLayout
+export default FoodsLayout;

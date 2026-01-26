@@ -5,91 +5,110 @@ import {
   TouchableOpacity,
   TextInput,
   Pressable,
-  Alert
-} from "react-native"
-import React, { useEffect, useState } from "react"
-import { MaterialIcons } from "@expo/vector-icons"
-import { useLoader } from "@/hooks/useLoader"
-import { useLocalSearchParams, useRouter } from "expo-router"
-import { addOrder, getOrderById, updateOrder } from "@/services/orderService"
-import { getAllFoods } from "@/services/foodService"
-import { Food } from "@/types/food"
+  Alert,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useLoader } from "@/hooks/useLoader";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { addOrder, getOrderById, updateOrder } from "@/services/orderService";
+import { foodsCollection } from "@/services/foodService";
+import { Food } from "@/types/food";
+import { onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { useAuth } from "@/hooks/useAuth";
 
 const OrderForm = () => {
-  const router = useRouter()
-  const { orderId, foodName } = useLocalSearchParams<{ orderId: string; foodName: string }>()
-  const { showLoader, hideLoader, isLoading } = useLoader()
+  const router = useRouter();
+  const { user } = useAuth();
+  const { orderId, foodName } = useLocalSearchParams<{ orderId: string; foodName: string }>();
+  const { showLoader, hideLoader, isLoading } = useLoader();
 
-  const [items, setItems] = useState("")
-  const [total, setTotal] = useState("")
-  const [isDelivered, setIsDelivered] = useState(false)
-  const [foods, setFoods] = useState<Food[]>([])
+  const [items, setItems] = useState("");
+  const [total, setTotal] = useState("");
+  const [isDelivered, setIsDelivered] = useState(false);
+  const [foods, setFoods] = useState<Food[]>([]);
 
   useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      foodsCollection,
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const data = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Food[];
+      setFoods(data);
+    });
+
     if (orderId) {
-      showLoader()
-      getOrderById(orderId)
+      showLoader();
+      getOrderById(orderId as string)
         .then((order) => {
-          setItems(order.items.join(", "))
-          setTotal(order.total.toString())
-          setIsDelivered(order.isDelivered)
+          setItems(order.items.join(", "));
+          setTotal(order.total.toString());
+          setIsDelivered(order.isDelivered);
         })
         .catch(() => Alert.alert("Error", "Failed to load order"))
-        .finally(() => hideLoader())
+        .finally(() => hideLoader());
     }
-    
-    // Load foods for suggestions
-    getAllFoods().then(setFoods).catch(console.error)
-    
-    // If foodName is passed, pre-fill items
+
     if (foodName) {
-      setItems(foodName)
+      setItems(foodName as string);
     }
-  }, [orderId, foodName])
+
+    return () => unsubscribe();
+  }, [user, orderId, foodName]);
 
   const handleSubmit = async () => {
-    if (isLoading) return
+    if (isLoading) return;
     if (!items.trim() || !total) {
-      Alert.alert("Error", "Please fill all fields")
-      return
+      Alert.alert("Error", "Please fill all fields");
+      return;
     }
 
-    const totalNum = parseFloat(total)
+    const totalNum = parseFloat(total);
     if (isNaN(totalNum) || totalNum <= 0) {
-      Alert.alert("Error", "Please enter a valid total amount")
-      return
+      Alert.alert("Error", "Please enter a valid total amount");
+      return;
     }
 
-    showLoader()
+    showLoader();
     try {
-      const itemArray = items.split(",").map(item => item.trim()).filter(item => item)
+      const itemArray = items
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item);
+
       if (orderId) {
-        await updateOrder(orderId, itemArray, totalNum, isDelivered)
-        Alert.alert("Success", "Order updated successfully")
+        await updateOrder(orderId as string, itemArray, totalNum, isDelivered);
+        Alert.alert("Success", "Order updated successfully");
       } else {
-        await addOrder(itemArray, totalNum, isDelivered)
-        Alert.alert("Success", "Order placed successfully")
+        await addOrder(itemArray, totalNum, isDelivered);
+        Alert.alert("Success", "Order placed successfully");
       }
-      router.back()
+      router.back();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Something went wrong")
+      Alert.alert("Error", err.message || "Something went wrong");
     } finally {
-      hideLoader()
+      hideLoader();
     }
-  }
+  };
 
   const addFoodToOrder = (foodName: string, price: number) => {
-    const currentItems = items ? `${items}, ${foodName}` : foodName
-    setItems(currentItems)
-    
-    // Update total
-    const currentTotal = total ? parseFloat(total) : 0
-    setTotal((currentTotal + price).toString())
-  }
+    const currentItems = items ? `${items}, ${foodName}` : foodName;
+    setItems(currentItems);
+
+    const currentTotal = total ? parseFloat(total) : 0;
+    setTotal((currentTotal + price).toString());
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header */}
       <View className="bg-white px-6 pt-12 pb-4 flex-row items-center border-b border-gray-200">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <MaterialIcons name="arrow-back" size={28} color="#374151" />
@@ -101,7 +120,6 @@ const OrderForm = () => {
 
       <ScrollView className="flex-1 p-6">
         <View className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-          {/* Items */}
           <View className="mb-6">
             <Text className="text-gray-700 text-lg font-semibold mb-2">
               Items *
@@ -119,7 +137,6 @@ const OrderForm = () => {
             </Text>
           </View>
 
-          {/* Total */}
           <View className="mb-6">
             <Text className="text-gray-700 text-lg font-semibold mb-2">
               Total Amount *
@@ -137,7 +154,6 @@ const OrderForm = () => {
             </View>
           </View>
 
-          {/* Delivery Status (for edit only) */}
           {orderId && (
             <View className="mb-6">
               <Text className="text-gray-700 text-lg font-semibold mb-2">
@@ -145,24 +161,29 @@ const OrderForm = () => {
               </Text>
               <TouchableOpacity
                 onPress={() => setIsDelivered(!isDelivered)}
-                className={`flex-row items-center p-4 rounded-xl ${isDelivered ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border border-gray-200'}`}
+                className={`flex-row items-center p-4 rounded-xl ${
+                  isDelivered ? "bg-green-50 border-2 border-green-200" : "bg-gray-50 border border-gray-200"
+                }`}
               >
-                <MaterialIcons 
-                  name={isDelivered ? "check-box" : "check-box-outline-blank"} 
-                  size={24} 
-                  color={isDelivered ? "#10B981" : "#9CA3AF"} 
+                <MaterialIcons
+                  name={isDelivered ? "check-box" : "check-box-outline-blank"}
+                  size={24}
+                  color={isDelivered ? "#10B981" : "#9CA3AF"}
                 />
-                <Text className={`ml-3 font-medium ${isDelivered ? 'text-green-800' : 'text-gray-600'}`}>
+                <Text
+                  className={`ml-3 font-medium ${
+                    isDelivered ? "text-green-800" : "text-gray-600"
+                  }`}
+                >
                   Mark as Delivered
                 </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Submit Button */}
           <Pressable
-            className={`px-6 py-4 rounded-2xl ${isLoading ? 'opacity-70' : ''}`}
-            style={{ backgroundColor: orderId ? '#3B82F6' : '#10B981' }}
+            className={`px-6 py-4 rounded-2xl ${isLoading ? "opacity-70" : ""}`}
+            style={{ backgroundColor: orderId ? "#3B82F6" : "#10B981" }}
             onPress={handleSubmit}
             disabled={isLoading}
           >
@@ -171,15 +192,11 @@ const OrderForm = () => {
             </Text>
           </Pressable>
 
-          <TouchableOpacity 
-            className="mt-4"
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity className="mt-4" onPress={() => router.back()}>
             <Text className="text-gray-500 text-center font-medium">Cancel</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Food Suggestions */}
         {!orderId && foods.length > 0 && (
           <View className="bg-white rounded-2xl p-6 shadow-sm">
             <Text className="text-gray-700 text-lg font-semibold mb-4">
@@ -190,7 +207,7 @@ const OrderForm = () => {
                 <TouchableOpacity
                   key={food.id}
                   onPress={() => addFoodToOrder(food.name, food.price)}
-                  className="bg-gray-50 rounded-xl p-4 mr-3"
+                  className="bg-gray-50 rounded-xl p-4 mr-3 min-w-[140px]"
                 >
                   <Text className="font-medium text-gray-800">{food.name}</Text>
                   <Text className="text-indigo-600 font-bold mt-1">${food.price}</Text>
@@ -202,7 +219,7 @@ const OrderForm = () => {
         )}
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default OrderForm
+export default OrderForm;

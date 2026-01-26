@@ -1,42 +1,47 @@
-import { View, Text, TouchableOpacity, Alert, ScrollView, Image } from "react-native"
-import React, { useCallback, useState } from "react"
-import { MaterialIcons } from "@expo/vector-icons"
-import { useFocusEffect, useRouter } from "expo-router"
-import { useLoader } from "@/hooks/useLoader"
-import {
-  getAllFoods,
-  getAllFoodsByCategory,
-  deleteFood
-} from "@/services/foodService"
-import { Food } from "@/types/food"
+import { View, Text, TouchableOpacity, Alert, ScrollView, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useLoader } from "@/hooks/useLoader";
+import { useAuth } from "@/hooks/useAuth";
+import { deleteFood } from "@/services/foodService";
+import { Food } from "@/types/food";
+import { onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { foodsCollection } from "@/services/foodService";
 
-type Category = "All" | "Pizza" | "Burger" | "Dessert" | "Sushi" | "Pasta"
+type Category = "All" | "Pizza" | "Burger" | "Dessert" | "Sushi" | "Pasta" | "Salad" | "Drinks";
+
+const OWNER_UID = "SH1T8LweRNeST1qVxJzEYLtWFUy1"; 
 
 const Foods = () => {
-  const router = useRouter()
-  const { showLoader, hideLoader } = useLoader()
-  const [foods, setFoods] = useState<Food[]>([])
-  const [activeCategory, setActiveCategory] = useState<Category>("All")
+  const { user } = useAuth();
+  const router = useRouter();
+  const { showLoader, hideLoader } = useLoader();
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [activeCategory, setActiveCategory] = useState<Category>("All");
 
-  const fetchFoods = async (category: Category = "All") => {
-    showLoader()
-    try {
-      let data: Food[] = []
-      if (category === "All") data = await getAllFoods()
-      else data = await getAllFoodsByCategory(category)
-      setFoods(data)
-    } catch {
-      Alert.alert("Error", "Error fetching foods")
-    } finally {
-      hideLoader()
+  const isOwner = user?.uid === OWNER_UID;
+
+  useEffect(() => {
+    if (!user) return;
+
+    let q = query(foodsCollection, orderBy('createdAt', 'desc'));
+    if (activeCategory !== "All") {
+      q = query(q, where('category', '==', activeCategory));
     }
-  }
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchFoods(activeCategory)
-    }, [activeCategory])
-  )
+    showLoader();
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Food));
+      setFoods(data);
+      hideLoader();
+    }, (error) => {
+      Alert.alert("Error", error.message);
+      hideLoader();
+    });
+
+    return unsubscribe;
+  }, [user, activeCategory]);
 
   const handleDelete = async (id: string) => {
     Alert.alert(
@@ -48,45 +53,45 @@ const Foods = () => {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            showLoader()
+            showLoader();
             try {
-              await deleteFood(id)
-              fetchFoods(activeCategory)
+              await deleteFood(id);
             } catch {
-              Alert.alert("Error", "Could not delete food")
+              Alert.alert("Error", "Could not delete food");
             } finally {
-              hideLoader()
+              hideLoader();
             }
           }
         }
       ]
-    )
-  }
+    );
+  };
 
   const handleEdit = (id: string) => {
-    router.push({ pathname: "/foods/form", params: { foodId: id } })
-  }
+    router.push({ pathname: "/foods/form", params: { foodId: id } });
+  };
 
-  const categories: Category[] = ["All", "Pizza", "Burger", "Dessert", "Sushi", "Pasta"]
+  const categories: Category[] = ["All", "Pizza", "Burger", "Dessert", "Sushi", "Pasta" , "Salad", "Drinks"];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "Pizza": return "#EF4444"
-      case "Burger": return "#F59E0B"
-      case "Dessert": return "#EC4899"
-      case "Sushi": return "#10B981"
-      case "Pasta": return "#8B5CF6"
-      default: return "#6B7280"
+      case "Pizza": return "#EF4444";
+      case "Burger": return "#F59E0B";
+      case "Dessert": return "#EC4899";
+      case "Sushi": return "#10B981";
+      case "Pasta": return "#8B5CF6";
+      case "Salad": return "#10B981";
+      case "Drinks": return "#0EA5E9";
+      default: return "#6B7280";
     }
-  }
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Category Filter */}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        className="px-4 py-3 bg-white border-b border-gray-200"
+        className="px-4 py-3 bg-white border-b border-gray-200 "
       >
         {categories.map((cat) => (
           <TouchableOpacity 
@@ -103,16 +108,24 @@ const Foods = () => {
         ))}
       </ScrollView>
 
-      {/* Add Button */}
-      <TouchableOpacity
-        className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-xl absolute bottom-6 right-6 p-4 z-50"
-        onPress={() => router.push("/foods/form")}
-      >
-        <MaterialIcons name="add" size={30} color="#fff" />
-      </TouchableOpacity>
+      {/* Add Button - Only owner can see this */}
+      {isOwner && (
+        <TouchableOpacity
+          className="bg-purple-600 rounded-full shadow-xl absolute bottom-6 right-6 p-4 z-50"
+          onPress={() => router.push("/foods/form")}
+        >
+          <MaterialIcons name="add" size={30} color="#fff" />
+        </TouchableOpacity>
+      )}
 
-      {/* Foods List */}
-      <ScrollView className="flex-1 px-4 pt-4">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 10,
+          paddingBottom: 120,
+        }}
+      >
         {foods.length === 0 ? (
           <View className="items-center justify-center mt-20">
             <MaterialIcons name="fastfood" size={80} color="#D1D5DB" />
@@ -126,8 +139,14 @@ const Foods = () => {
               className="bg-white rounded-2xl p-4 mb-4 shadow-md"
             >
               <View className="flex-row">
-                <View className="w-20 h-20 bg-gray-100 rounded-xl items-center justify-center mr-4">
-                  <MaterialIcons name="restaurant" size={32} color={getCategoryColor(food.category)} />
+                <View className="w-20 h-20 rounded-xl overflow-hidden mr-4">
+                  {food.imageUrl ? (
+                    <Image source={{ uri: food.imageUrl }} className="w-full h-full" resizeMode="cover" />
+                  ) : (
+                    <View className="bg-gray-100 w-full h-full items-center justify-center">
+                      <MaterialIcons name="restaurant" size={32} color={getCategoryColor(food.category)} />
+                    </View>
+                  )}
                 </View>
                 
                 <View className="flex-1">
@@ -154,19 +173,24 @@ const Foods = () => {
                         <MaterialIcons name="visibility" size={20} color="#3B82F6" />
                       </TouchableOpacity>
                       
-                      <TouchableOpacity
-                        onPress={() => handleEdit(food.id)}
-                        className="p-2 rounded-lg bg-yellow-50 mr-2"
-                      >
-                        <MaterialIcons name="edit" size={20} color="#F59E0B" />
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        onPress={() => handleDelete(food.id)}
-                        className="p-2 rounded-lg bg-red-50"
-                      >
-                        <MaterialIcons name="delete" size={20} color="#EF4444" />
-                      </TouchableOpacity>
+                      {/* // Only show Edit/Delete if the user is the owner// */}
+                      {food.userId === OWNER_UID && (
+                        <>
+                          <TouchableOpacity
+                            onPress={() => handleEdit(food.id)}
+                            className="p-2 rounded-lg bg-yellow-50 mr-2"
+                          >
+                            <MaterialIcons name="edit" size={20} color="#F59E0B" />
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            onPress={() => handleDelete(food.id)}
+                            className="p-2 rounded-lg bg-red-50"
+                          >
+                            <MaterialIcons name="delete" size={20} color="#EF4444" />
+                          </TouchableOpacity>
+                        </>
+                      )}
                     </View>
                   </View>
                 </View>
@@ -176,7 +200,7 @@ const Foods = () => {
         )}
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default Foods
+export default Foods;

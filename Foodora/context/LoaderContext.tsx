@@ -1,23 +1,23 @@
-import React, { createContext, useState, ReactNode } from "react"
-import { View, ActivityIndicator, Text } from "react-native"  
+import React, { createContext, useState, ReactNode } from "react";
+import { View, ActivityIndicator, Text } from "react-native";
 
 interface LoaderContextProps {
-  showLoader: () => void
-  hideLoader: () => void
-  isLoading: boolean
+  showLoader: () => void;
+  hideLoader: () => void;
+  isLoading: boolean;
 }
 
 export const LoaderContext = createContext<LoaderContextProps>({
   showLoader: () => {},
   hideLoader: () => {},
   isLoading: false
-})
+});
 
 export const LoaderProvider = ({ children }: { children: ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
-  const showLoader = () => setIsLoading(true)
-  const hideLoader = () => setIsLoading(false)
+  const showLoader = () => setIsLoading(true);
+  const hideLoader = () => setIsLoading(false);
 
   return (
     <LoaderContext.Provider value={{ showLoader, hideLoader, isLoading }}>
@@ -32,5 +32,5 @@ export const LoaderProvider = ({ children }: { children: ReactNode }) => {
         </View>
       )}
     </LoaderContext.Provider>
-  )
-}
+  );
+};

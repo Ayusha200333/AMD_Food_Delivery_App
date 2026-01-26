@@ -1,29 +1,25 @@
-import { getAuth } from 'firebase/auth'
+import { getAuth } from 'firebase/auth';
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
-  orderBy,
-  query,
-  updateDoc,
-  where
-} from 'firebase/firestore'
-import { db } from './firebase'
-import { Order } from '@/types/order'
+  updateDoc
+} from 'firebase/firestore';
+import { db } from './firebase';
+import { Order } from '@/types/order';
 
-const auth = getAuth()
-const ordersCollection = collection(db, 'orders')
+const auth = getAuth();
+export const ordersCollection = collection(db, 'orders');  
 
 export const addOrder = async (
   items: string[],
   total: number,
   isDelivered: boolean = false
 ): Promise<void> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated.');
 
   await addDoc(ordersCollection, {
     items,
@@ -31,44 +27,20 @@ export const addOrder = async (
     isDelivered,
     userId: user.uid,
     placedAt: new Date().toISOString()
-  })
-}
-
-export const getAllOrders = async (): Promise<Order[]> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
-
-  const q = query(
-    ordersCollection,
-    where('userId', '==', user.uid),
-    orderBy('placedAt', 'desc')
-  )
-
-  const snapshot = await getDocs(q)
-  return snapshot.docs.map(dataSet => {
-    const data = dataSet.data()
-    return {
-      id: dataSet.id,
-      items: data.items as string[],
-      total: data.total as number,
-      isDelivered: (data.isDelivered as boolean) || false,
-      placedAt: data.placedAt as string,
-      userId: data.userId as string
-    }
-  })
-}
+  });
+};
 
 export const getOrderById = async (id: string): Promise<Order> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated.');
 
-  const ref = doc(db, 'orders', id)
-  const orderDoc = await getDoc(ref)
+  const ref = doc(db, 'orders', id);
+  const orderDoc = await getDoc(ref);
 
-  if (!orderDoc.exists()) throw new Error('Order not found')
+  if (!orderDoc.exists()) throw new Error('Order not found');
 
-  const data = orderDoc.data()
-  if (data.userId !== user.uid) throw new Error('Unauthorized')
+  const data = orderDoc.data();
+  if (data.userId !== user.uid) throw new Error('Unauthorized');
 
   return {
     id: orderDoc.id,
@@ -77,8 +49,8 @@ export const getOrderById = async (id: string): Promise<Order> => {
     isDelivered: data.isDelivered || false,
     placedAt: data.placedAt || '',
     userId: data.userId || ''
-  }
-}
+  };
+};
 
 export const updateOrder = async (
   id: string,
@@ -86,72 +58,47 @@ export const updateOrder = async (
   total: number,
   isDelivered?: boolean
 ): Promise<void> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated.');
 
-  const ref = doc(db, 'orders', id)
-  const snap = await getDoc(ref)
+  const ref = doc(db, 'orders', id);
+  const snap = await getDoc(ref);
 
-  if (!snap.exists()) throw new Error('Order not found')
+  if (!snap.exists()) throw new Error('Order not found');
 
-  const data = snap.data()
-  if (data.userId !== user.uid) throw new Error('Unauthorized')
+  const data = snap.data();
+  if (data.userId !== user.uid) throw new Error('Unauthorized');
 
   await updateDoc(ref, {
     items,
     total,
     isDelivered: isDelivered ?? data.isDelivered,
     updatedAt: new Date().toISOString()
-  })
-}
+  });
+};
 
 export const deleteOrder = async (id: string): Promise<void> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated.');
 
-  const ref = doc(db, 'orders', id)
-  const snap = await getDoc(ref)
+  const ref = doc(db, 'orders', id);
+  const snap = await getDoc(ref);
 
-  if (!snap.exists()) throw new Error('Order not found')
-  if (snap.data().userId !== user.uid) throw new Error('Unauthorized')
+  if (!snap.exists()) throw new Error('Order not found');
+  if (snap.data().userId !== user.uid) throw new Error('Unauthorized');
 
-  await deleteDoc(ref)
-}
+  await deleteDoc(ref);
+};
 
 export const completeOrder = async (id: string, isDelivered: boolean = true): Promise<void> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated.');
 
-  const ref = doc(db, 'orders', id)
-  const snap = await getDoc(ref)
+  const ref = doc(db, 'orders', id);
+  const snap = await getDoc(ref);
 
-  if (!snap.exists()) throw new Error('Order not found')
-  if (snap.data().userId !== user.uid) throw new Error('Unauthorized')
+  if (!snap.exists()) throw new Error('Order not found');
+  if (snap.data().userId !== user.uid) throw new Error('Unauthorized');
 
-  await updateDoc(ref, { isDelivered })
-}
-
-export const getAllOrdersByStatus = async (isDelivered: boolean): Promise<Order[]> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated.')
-
-  const q = query(
-    ordersCollection,
-    where('userId', '==', user.uid),
-    where('isDelivered', '==', isDelivered),
-    orderBy('placedAt', 'desc')
-  )
-
-  const snapshot = await getDocs(q)
-  return snapshot.docs.map(docSnap => {
-    const data = docSnap.data()
-    return {
-      id: docSnap.id,
-      items: data.items as string[],
-      total: data.total as number,
-      isDelivered: (data.isDelivered as boolean) || false,
-      placedAt: data.placedAt as string,
-      userId: data.userId as string
-    }
-  })
-}
+  await updateDoc(ref, { isDelivered });
+};

@@ -4,6 +4,7 @@ export interface Food {
   description: string
   price: number
   category: string
+  imageUrl?: string  
   createdAt: string
   userId?: string
 }
