@@ -222,13 +222,13 @@ const Checkout = () => {
           >
             <MaterialIcons name="credit-card" size={32} color={paymentMethod === "card" ? "#4F46E5" : "#6B7280"} />
             <Text className={`ml-5 text-xl font-medium ${paymentMethod === "card" ? "text-indigo-700" : "text-gray-700"}`}>
-              Credit / Debit Card (Coming Soon)
+              Credit / Debit Card
             </Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          className="bg-green-500 py-7 rounded-2xl items-center shadow-2xl mb-10 active:scale-90"
+          className="bg-green-500 py-5 rounded-3xl items-center shadow-2xl mb-10 active:scale-90"
           onPress={handlePlaceOrder}
           disabled={isLoading}
         >

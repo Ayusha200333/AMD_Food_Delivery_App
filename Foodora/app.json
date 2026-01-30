@@ -4,7 +4,7 @@
     "slug": "Foodora",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/Foodora.jpg",
     "scheme": "foodora",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

@@ -168,7 +168,7 @@ const FoodDetails = () => {
                 onPress={handleDelete}
               >
                 <MaterialIcons name="delete" size={28} color="white" />
-                <Text className="text-white font-semibold mt-2">Delete</Text>
+                <Text className="text-white font-semibold mt-2 ">Delete</Text>
               </TouchableOpacity>
             </View>
           )}

@@ -105,7 +105,6 @@ const Orders = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Status Filter */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

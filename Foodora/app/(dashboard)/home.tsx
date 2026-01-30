@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image } from "react-native";
-import React, { useState, useCallback, useEffect } from "react";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image, ImageBackground } from "react-native";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useLoader } from "@/hooks/useLoader";
@@ -11,7 +11,7 @@ import { Food } from "@/types/food";
 import { Order } from "@/types/order";
 import * as Animatable from "react-native-animatable";
 
-const OWNER_UID = "SH1T8LweRNeST1qVxJzEYLtWFUy1"; 
+const OWNER_UID = "SH1T8LweRNeST1qVxJzEYLtWFUy1";
 
 const Home = () => {
   const router = useRouter();
@@ -30,11 +30,7 @@ const Home = () => {
 
     showLoader();
 
-    const foodsQ = query(
-      foodsCollection,
-      orderBy("createdAt", "desc")
-    );
-
+    const foodsQ = query(foodsCollection, orderBy("createdAt", "desc"));
     const unsubscribeFoods = onSnapshot(foodsQ, (snap) => {
       const foodsData = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Food));
       setFeaturedFoods(foodsData.slice(0, 3));
@@ -48,7 +44,6 @@ const Home = () => {
       orderBy("placedAt", "desc"),
       limit(2)
     );
-
     const unsubscribeOrders = onSnapshot(ordersQ, (snap) => {
       const ordersData = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Order));
       setRecentOrders(ordersData);
@@ -77,33 +72,34 @@ const Home = () => {
       className="flex-1 bg-gray-50"
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Animatable.View animation="fadeInDown" duration={800} className="bg-purple-950 px-6 pt-16 pb-12">
-        <View className="flex-row justify-between items-center">
-          <View className="flex-1 pr-4">
-            {/* <Text className="text-white/80 text-lg">Welcome To Foodora</Text>
-            <Text className="text-white text-4xl font-extrabold mt-1">
-              {user?.displayName?.split(" ")[0] || "User"} 👋
-            </Text> */}
-            <Text className="text-white text-5xl font-extrabold tracking-wide">
-              Foodora
-            </Text>
-
-            <Text className="text-white/80 text-lg mt-2">
-              Welcome back,{" "}
-            <Text className="text-white font-semibold">
-               {user?.displayName?.split(" ")[0] || "User"}
-            </Text>{" "}
-              👋
-            </Text>
-          </View>
-          <TouchableOpacity className="bg-white/20 p-4 rounded-full">
-            <MaterialIcons name="notifications" size={28} color="white" />
-          </TouchableOpacity>
-        </View>
-      </Animatable.View>
+    <ImageBackground
+      source={{ uri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836" }}
+      resizeMode="cover"
+      className="px-6 pt-16 pb-12"
+    >
+  <View className="absolute inset-0 bg-black/30 rounded-b-3xl" />
+  
+  <Animatable.View animation="fadeInDown" duration={800} className="relative">
+    <View className="flex-row justify-between items-center">
+      <View className="flex-1 pr-4">
+        <Text className="text-white text-5xl font-extrabold tracking-wide">Foodora</Text>
+        <Text className="text-white/80 text-lg mt-2">
+          Welcome back,{" "}
+          <Text className="text-white font-bold">
+            {user?.displayName?.split(" ")[0] || "User"}
+          </Text>{" "}
+          👋
+        </Text>
+      </View>
+      <TouchableOpacity className="bg-white/20 p-4 rounded-full active:scale-95">
+        <MaterialIcons name="notifications" size={28} color="white" />
+      </TouchableOpacity>
+    </View>
+  </Animatable.View>
+</ImageBackground>
 
       <View className="-mt-10 px-5">
-        <Animatable.View animation="fadeInUp" delay={200} className="bg-white rounded-3xl p-6 shadow-2xl">
+        <Animatable.View animation="fadeInUp" delay={200} className="bg-white/90 rounded-3xl p-6 shadow-2xl">
           <View className="flex-row justify-between items-center">
             {stats.map((stat, index) => (
               <Animatable.View
@@ -161,31 +157,32 @@ const Home = () => {
         {featuredFoods.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {featuredFoods.map((food) => (
-              <TouchableOpacity
-                key={food.id}
-                className="bg-white rounded-3xl mr-5 w-72 shadow-lg overflow-hidden active:scale-95"
-                onPress={() => router.push(`/foods/${food.id}`)}
-              >
-                <Image
-                  source={{ uri: food.imageUrl || "https://via.placeholder.com/300x180" }}
-                  className="w-full h-48"
-                  resizeMode="cover"
-                />
-                <View className="p-5">
-                  <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
-                    {food.name}
-                  </Text>
-                  <Text className="text-gray-600 mt-2" numberOfLines={2}>
-                    {food.description}
-                  </Text>
-                  <View className="flex-row justify-between items-center mt-4">
-                    <Text className="text-2xl font-bold text-indigo-600">${food.price}</Text>
-                    <View className="px-4 py-2 rounded-full bg-blue-100">
-                      <Text className="text-blue-700 text-sm font-medium">{food.category}</Text>
+              <Animatable.View key={food.id} animation="fadeInUp" delay={600} className="mr-5">
+                <TouchableOpacity
+                  className="bg-white rounded-3xl shadow-lg overflow-hidden w-72 active:scale-95"
+                  onPress={() => router.push(`/foods/${food.id}`)}
+                >
+                  <Image
+                    source={{ uri: food.imageUrl || "https://via.placeholder.com/300x180" }}
+                    className="w-full h-48"
+                    resizeMode="cover"
+                  />
+                  <View className="p-5">
+                    <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
+                      {food.name}
+                    </Text>
+                    <Text className="text-gray-600 mt-2" numberOfLines={2}>
+                      {food.description}
+                    </Text>
+                    <View className="flex-row justify-between items-center mt-4">
+                      <Text className="text-2xl font-bold text-indigo-500">${food.price}</Text>
+                      <View className="px-4 py-2 rounded-full bg-blue-100">
+                        <Text className="text-blue-700 text-sm font-medium">{food.category}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </Animatable.View>
             ))}
           </ScrollView>
         ) : (
