@@ -102,13 +102,7 @@ npx expo start
 * Scan the QR code using **Expo Go** app on your mobile device
 * Or run on Android Emulator
 
----
 
-## 📦 Build Information
-
-* Platform: **Android**
-* Build Type: **Expo Build / APK**
-* The build is included as part of the final submission
 
 
 
