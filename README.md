@@ -90,7 +90,7 @@ All data is persisted using **Firebase Firestore**.
 git clone https://github.com/Ayusha200333/AMD_Food_Delivery_App.git
 
 # Navigate to project directory
-cd AMD_Food_Delivery_App
+cd Foodora
 
 # Install dependencies
 npm install
@@ -101,6 +101,7 @@ npx expo start
 
 * Scan the QR code using **Expo Go** app on your mobile device
 * Or run on Android Emulator
+
 
 
 
