@@ -102,6 +102,8 @@ npx expo start
 * Scan the QR code using **Expo Go** app on your mobile device
 * Or run on Android Emulator
 
+Expo build Link: https://expo.dev/accounts/prasadani/projects/Foodora/builds/51a3f749-cd71-4ad1-831e-c1be0de1fee7
+
 
 
 
